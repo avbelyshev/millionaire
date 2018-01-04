@@ -59,6 +59,32 @@ RSpec.describe Game, type: :model do
       expect(game_w_questions.finished?).to be_falsey
     end
 
+    context 'correct .answer_current_question!' do
+      let(:answer_key) { game_w_questions.current_game_question.correct_answer_key }
+
+      it 'correct answer' do
+        expect(game_w_questions.answer_current_question!(answer_key)).to be_truthy
+      end
+
+      it 'wrong answer' do
+        expect(game_w_questions.answer_current_question!(!answer_key)).to be_falsey
+      end
+
+      it 'last answer is correct' do
+        game_w_questions.current_level = Question::QUESTION_LEVELS.max
+        expect(game_w_questions.answer_current_question!(answer_key)).to be_truthy
+        expect(game_w_questions.status).to eq(:won)
+        expect(game_w_questions.finished?).to be_truthy
+      end
+
+      it 'time-out loss' do
+        game_w_questions.created_at = 1.hour.ago
+        game_w_questions.answer_current_question!(answer_key)
+        expect(game_w_questions.status).to eq(:timeout)
+        expect(game_w_questions.finished?).to be_truthy
+      end
+    end
+
     it 'take_money! finishes the game' do
       # берем игру и отвечаем на текущий вопрос
       q = game_w_questions.current_game_question
