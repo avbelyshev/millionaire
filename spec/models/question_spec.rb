@@ -9,4 +9,7 @@ RSpec.describe Question, type: :model do
     it { should_not allow_value(500).for(:level) }
     it { should allow_value(14).for(:level) }
   end
+
+  subject { Question.new(text: 'some', level: 0, answer1: '1', answer2: '1', answer3: '1', answer4: '1') }
+  it { should validate_uniqueness_of(:text).case_insensitive }
 end
