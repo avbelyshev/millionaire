@@ -66,6 +66,14 @@ class Game < ActiveRecord::Base
     end
   end
 
+  #---------  Основные методы доступа к состоянию игры ------------------
+
+  # последний отвеченный вопрос игры, *nil* для новой игры!
+  def previous_game_question
+    # с помощью ruby метода detect находим в массиве game_questions нужный вопрос
+    game_questions.detect { |q| q.question.level == previous_level }
+  end
+
   # Метод current_game_question возвращает текущий, еще неотвеченный вопрос игры
   def current_game_question
     game_questions.detect { |q| q.question.level == current_level }
@@ -141,6 +149,37 @@ class Game < ActiveRecord::Base
 
     # Заканчиваем игру, записав игроку приз из несгораемых сумм
     finish_game!(previous_level > -1 ? PRIZES[previous_level] : 0, false)
+  end
+
+  # Создает варианты подсказок для текущего игрового вопроса.
+  # Возвращает true, если подсказка применилась успешно,
+  # false если подсказка уже заюзана.
+  #
+  # help_type = :fifty_fifty | :audience_help | :friend_call
+  def use_help(help_type)
+    case help_type
+      when :fifty_fifty
+        unless fifty_fifty_used
+          # ActiveRecord метод toggle! переключает булевое поле сразу в базе
+          toggle!(:fifty_fifty_used)
+          current_game_question.add_fifty_fifty
+          return true
+        end
+      when :audience_help
+        unless audience_help_used
+          toggle!(:audience_help_used)
+          current_game_question.add_audience_help
+          return true
+        end
+      when :friend_call
+        unless friend_call_used
+          toggle!(:friend_call_used)
+          current_game_question.add_friend_call
+          return true
+        end
+    end
+
+    false
   end
 
   # Результат игры status, возвращает, одно из:
