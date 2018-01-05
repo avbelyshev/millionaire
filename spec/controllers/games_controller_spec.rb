@@ -80,7 +80,7 @@ RSpec.describe GamesController, type: :controller do
       expect(response).to render_template('show') # и отрендерить шаблон show
     end
 
-    # юзер отвечает на игру корректно - игра продолжается
+    # юзер отвечает на вопрос корректно - игра продолжается
     it 'answers correct' do
       # передаем параметр params[:letter]
       put :answer, id: game_w_questions.id, letter: game_w_questions.current_game_question.correct_answer_key
@@ -90,6 +90,17 @@ RSpec.describe GamesController, type: :controller do
       expect(game.current_level).to be > 0
       expect(response).to redirect_to(game_path(game))
       expect(flash.empty?).to be_truthy # удачный ответ не заполняет flash
+    end
+
+    # юзер отвечает на вопрос не правильно - игра завершается
+    it 'wrong answer' do
+      put :answer, id: game_w_questions.id, letter: 'a'
+      game = assigns(:game)
+
+      expect(game.finished?).to be_truthy
+      expect(game.status).to eq(:fail)
+      expect(response).to redirect_to(user_path(user))
+      expect(flash[:alert]).to be
     end
 
     # проверка, что пользователя посылают из чужой игры
