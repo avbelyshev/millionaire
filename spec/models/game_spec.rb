@@ -64,10 +64,15 @@ RSpec.describe Game, type: :model do
 
       it 'correct answer' do
         expect(game_w_questions.answer_current_question!(answer_key)).to be_truthy
+        expect(game_w_questions.status).to eq(:in_progress)
+        expect(game_w_questions.finished?).to be_falsey
       end
 
       it 'wrong answer' do
-        expect(game_w_questions.answer_current_question!(!answer_key)).to be_falsey
+        wrong_answer_key = (%w(a b c d) - [answer_key]).sample
+        expect(game_w_questions.answer_current_question!(wrong_answer_key)).to be_falsey
+        expect(game_w_questions.status).to eq(:fail)
+        expect(game_w_questions.finished?).to be_truthy
       end
 
       it 'last answer is correct' do
